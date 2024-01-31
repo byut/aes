@@ -17,6 +17,7 @@
 .section .text
 
 .global AES128_KeySchedule
+.global AES128_KeySchedule_Inv
 
 .macro aeskeyexpand temp, prev, curr
     pshufd $0xff, \curr, \curr
@@ -80,6 +81,76 @@ AES128_KeySchedule:
     aeskeygenassist  $RC9, %xmm1, %xmm2
     aeskeyexpand    %xmm0, %xmm1, %xmm2
     movups          %xmm1, R9(%rdi) 
+
+    aeskeygenassist $RC10, %xmm1, %xmm2
+    aeskeyexpand    %xmm0, %xmm1, %xmm2
+    movups          %xmm1, R10(%rdi) 
+
+    ret
+
+#
+# AES Inverse Key Schedule
+#
+# Expands the given key into 10 separate round keys, used by
+# decryption functions (those that do not generate round keys in the process)
+# 
+# Parameters:
+#   %rdi - address of a memory area 176 bytes long, with the initial 16 bytes 
+#          set to represent the input key.
+#
+# Variables:
+#   %xmm0 - intermediate value utilized by the key expansion macro
+#   %xmm1 - key computed in the previous round (initially represents the input key)
+#   %xmm2 - result of the aeskeygenassist and aesimc instruction
+#   %xmm3 - result of the aesimc instruction
+AES128_KeySchedule_Inv:
+    pxor    %xmm0, %xmm0
+    movups (%rdi), %xmm1
+
+    aeskeygenassist  $RC1, %xmm1, %xmm2
+    aeskeyexpand    %xmm0, %xmm1, %xmm2
+    aesimc          %xmm1, %xmm3
+    movups          %xmm3, R1(%rdi) 
+
+    aeskeygenassist  $RC2, %xmm1, %xmm2
+    aeskeyexpand    %xmm0, %xmm1, %xmm2
+    aesimc          %xmm1, %xmm3
+    movups          %xmm3, R2(%rdi) 
+
+    aeskeygenassist  $RC3, %xmm1, %xmm2
+    aeskeyexpand    %xmm0, %xmm1, %xmm2
+    aesimc          %xmm1, %xmm3
+    movups          %xmm3, R3(%rdi) 
+
+    aeskeygenassist  $RC4, %xmm1, %xmm2
+    aeskeyexpand    %xmm0, %xmm1, %xmm2
+    aesimc          %xmm1, %xmm3
+    movups          %xmm3, R4(%rdi) 
+
+    aeskeygenassist  $RC5, %xmm1, %xmm2
+    aeskeyexpand    %xmm0, %xmm1, %xmm2
+    aesimc          %xmm1, %xmm3
+    movups          %xmm3, R5(%rdi) 
+
+    aeskeygenassist  $RC6, %xmm1, %xmm2
+    aeskeyexpand    %xmm0, %xmm1, %xmm2
+    aesimc          %xmm1, %xmm3
+    movups          %xmm3, R6(%rdi) 
+
+    aeskeygenassist  $RC7, %xmm1, %xmm2
+    aeskeyexpand    %xmm0, %xmm1, %xmm2
+    aesimc          %xmm1, %xmm3
+    movups          %xmm3, R7(%rdi) 
+
+    aeskeygenassist  $RC8, %xmm1, %xmm2
+    aeskeyexpand    %xmm0, %xmm1, %xmm2
+    aesimc          %xmm1, %xmm3
+    movups          %xmm3, R8(%rdi) 
+
+    aeskeygenassist  $RC9, %xmm1, %xmm2
+    aeskeyexpand    %xmm0, %xmm1, %xmm2
+    aesimc          %xmm1, %xmm3
+    movups          %xmm3, R9(%rdi) 
 
     aeskeygenassist $RC10, %xmm1, %xmm2
     aeskeyexpand    %xmm0, %xmm1, %xmm2
