@@ -23,6 +23,8 @@
 .global AES256_KeySchedule
 .global AES256_KeySchedule_Inv
 
+.global AES256_EncryptBlock_P
+
 .macro aeskeyexpand temp, prev, curr
     pshufd $0xff, \curr, \curr
     shufps $0x40, \prev, \temp
@@ -198,4 +200,33 @@ AES256_KeySchedule_Inv:
     aeskeyexpand   %xmm15, %xmm12, %xmm14
     movups         %xmm14, R14(%rdi)
 
+    ret
+
+#
+# AES Block Encryption
+#
+# Encrypts a single 256-bit block of data using a set of precomputed keys.
+#
+# Parameters:
+#   %rdi - memory address of the output buffer that is at least 16 bytes long
+#   %rsi - memory address of the input data block
+#   %rdx - memory address where round keys are stored
+AES256_EncryptBlock_P:
+    movups        (%rsi), %xmm0
+    pxor          (%rdx), %xmm0
+    aesenc      R1(%rdx), %xmm0
+    aesenc      R2(%rdx), %xmm0
+    aesenc      R3(%rdx), %xmm0
+    aesenc      R4(%rdx), %xmm0
+    aesenc      R5(%rdx), %xmm0
+    aesenc      R6(%rdx), %xmm0
+    aesenc      R7(%rdx), %xmm0
+    aesenc      R8(%rdx), %xmm0
+    aesenc      R9(%rdx), %xmm0
+    aesenc     R10(%rdx), %xmm0
+    aesenc     R11(%rdx), %xmm0
+    aesenc     R12(%rdx), %xmm0
+    aesenc     R13(%rdx), %xmm0
+    aesenclast R14(%rdx), %xmm0
+    movups         %xmm0, (%rdi)
     ret
